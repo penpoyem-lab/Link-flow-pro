@@ -1,0 +1,8 @@
+{
+  "name": "LinkFlow",
+  "description": "Fast and versatile media and audio stream downloader for YouTube, Instagram, TikTok and direct media streams.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
