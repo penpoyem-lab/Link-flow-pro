@@ -255,6 +255,19 @@ class LinkFlowViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun enqueueDownload(analysis: MediaAnalysisResult, option: QualityOption) {
+        viewModelScope.launch {
+            val jobId = queueManager.enqueueDownload(analysis, option)
+            _uiState.update {
+                it.copy(
+                    showQualitySheet = false,
+                    activeModalJobId = jobId
+                )
+            }
+            refreshStorageMetrics()
+        }
+    }
+
     fun openActiveProgressModal(jobId: String) {
         _uiState.update { it.copy(activeModalJobId = jobId) }
     }

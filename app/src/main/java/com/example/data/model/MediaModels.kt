@@ -4,14 +4,17 @@ enum class MediaFormat(
     val extension: String,
     val mimeType: String,
     val isVideo: Boolean,
-    val labelText: String
+    val labelText: String,
+    val isImage: Boolean = false
 ) {
     MP4("mp4", "video/mp4", true, "MP4 Video"),
     WEBM("webm", "video/webm", true, "WebM Video"),
     MP3("mp3", "audio/mpeg", false, "MP3 Audio"),
     M4A("m4a", "audio/mp4", false, "M4A Studio AAC"),
     FLAC("flac", "audio/flac", false, "FLAC Hi-Res"),
-    WAV("wav", "audio/wav", false, "WAV Studio PCM")
+    WAV("wav", "audio/wav", false, "WAV Studio PCM"),
+    JPG("jpg", "image/jpeg", false, "HD Photo (JPG)", true),
+    PNG("png", "image/png", false, "HD Photo (PNG)", true)
 }
 
 data class QualityOption(
@@ -45,6 +48,8 @@ data class MediaAnalysisResult(
     val externalLaunchUrl: String? = null,
     val videoOptions: List<QualityOption> = emptyList(),
     val audioOptions: List<QualityOption> = emptyList(),
+    val photoUrls: List<String> = emptyList(),
+    val isPhotoPost: Boolean = false,
     val timestampAnalyzed: Long = System.currentTimeMillis()
 )
 

@@ -41,6 +41,7 @@ import com.example.ui.screens.ActiveDownloadProgressModal
 import com.example.ui.screens.AppLockGateScreen
 import com.example.ui.screens.DownloadsHistoryScreen
 import com.example.ui.screens.HomeScreen
+import com.example.ui.screens.InstagramPhotoDownloaderScreen
 import com.example.ui.screens.LibraryScreen
 import com.example.ui.screens.QualitySelectorSheet
 import com.example.ui.screens.SettingsScreen
@@ -165,9 +166,25 @@ fun LinkFlowApp(viewModel: LinkFlowViewModel) {
                         onOpenQualitySelector = viewModel::openQualitySelector,
                         onStartDownload = viewModel::startSelectedDownload,
                         onOpenDownloadModal = viewModel::openActiveProgressModal,
-                        onSelectPreset = viewModel::loadAndAnalyzePreset
+                        onSelectPreset = viewModel::loadAndAnalyzePreset,
+                        onNavigateToPhotos = { viewModel.setTab(1) },
+                        onNavigateToDownloads = { viewModel.setTab(2) }
                     )
-                    1 -> DownloadsHistoryScreen(
+                    1 -> InstagramPhotoDownloaderScreen(
+                        uiState = uiState,
+                        onUrlChanged = viewModel::onUrlChanged,
+                        onAnalyze = viewModel::analyzeCurrentUrl,
+                        onDownloadPhoto = { option ->
+                            uiState.currentAnalysis?.let { analysis ->
+                                viewModel.enqueueDownload(analysis, option)
+                            }
+                        },
+                        onSelectPresetUrl = { url ->
+                            viewModel.onUrlChanged(url)
+                            viewModel.analyzeCurrentUrl()
+                        }
+                    )
+                    2 -> DownloadsHistoryScreen(
                         downloads = allDownloads,
                         onOpenModal = viewModel::openActiveProgressModal,
                         onPause = viewModel::pauseDownload,
@@ -175,7 +192,7 @@ fun LinkFlowApp(viewModel: LinkFlowViewModel) {
                         onDelete = viewModel::deleteDownload,
                         onClearCompleted = viewModel::clearCompleted
                     )
-                    2 -> LibraryScreen(
+                    3 -> LibraryScreen(
                         downloads = allDownloads,
                         selectedFilter = uiState.libraryFilter,
                         searchQuery = uiState.librarySearchQuery,
@@ -190,7 +207,7 @@ fun LinkFlowApp(viewModel: LinkFlowViewModel) {
                         onClosePreview = viewModel::closePlaybackPreview,
                         onDelete = viewModel::deleteDownload
                     )
-                    3 -> SettingsScreen(
+                    4 -> SettingsScreen(
                         uiState = uiState,
                         onToggleWifiOnly = viewModel::toggleWifiOnly,
                         onToggleAutoRetry = viewModel::toggleAutoRetry,

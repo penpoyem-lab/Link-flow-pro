@@ -5,11 +5,18 @@ object ProviderDetector {
         val lower = url.trim().lowercase()
         return when {
             lower.contains("youtube.com") || lower.contains("youtu.be") -> "YouTube"
-            lower.contains("instagram.com") || lower.contains("instagr.am") -> "Instagram"
-            lower.contains("tiktok.com") -> "TikTok"
             lower.contains("spotify.com") -> "Spotify"
+            lower.contains("instagram.com") || lower.contains("instagr.am") -> "Instagram"
+            lower.contains("facebook.com") || lower.contains("fb.watch") || lower.contains("fb.com") -> "Facebook"
+            lower.contains("tiktok.com") -> "TikTok"
+            lower.contains("pinterest.com") || lower.contains("pin.it") -> "Pinterest"
             else -> "Direct / Web"
         }
+    }
+
+    fun isInstagramPhotoPost(url: String): Boolean {
+        val lower = url.trim().lowercase()
+        return lower.contains("instagram.com/p/") || lower.contains("instagr.am/p/")
     }
 
     fun extractYouTubeVideoId(url: String): String? {
@@ -29,7 +36,13 @@ object ProviderDetector {
 
     fun extractInstagramCode(url: String): String? {
         val trimmed = url.trim()
-        val regex = Regex("""instagram\.com/(?:reel|p|tv)/([a-zA-Z0-9_-]+)""")
+        val regex = Regex("""instagram\.com/(?:reel|p|tv|stories)/([a-zA-Z0-9_-]+)""")
+        return regex.find(trimmed)?.groupValues?.getOrNull(1)
+    }
+
+    fun extractFacebookVideoId(url: String): String? {
+        val trimmed = url.trim()
+        val regex = Regex("""(?:facebook\.com/(?:watch\?v=|reel/|videos/)|fb\.watch/)([a-zA-Z0-9_-]+)""")
         return regex.find(trimmed)?.groupValues?.getOrNull(1)
     }
 }

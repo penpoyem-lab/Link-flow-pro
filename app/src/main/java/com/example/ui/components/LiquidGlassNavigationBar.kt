@@ -1,8 +1,14 @@
 package com.example.ui.components
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -24,6 +30,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
@@ -46,8 +53,11 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.theme.AccentCyan
 import com.example.ui.theme.AccentIndigo
 import com.example.ui.theme.AccentSky
+import com.example.ui.theme.AccentViolet
+import com.example.ui.theme.AccentVioletDark
 import com.example.ui.theme.SlateBorderCrisp
 import com.example.ui.theme.SlateBorderSubtle
 import com.example.ui.theme.SlateSurface
@@ -74,6 +84,7 @@ fun LiquidGlassNavigationBar(
     val tabs = remember(activeDownloadsCount, libraryCount) {
         listOf(
             NavTabItem("Home", Icons.Default.Home, "nav_tab_home"),
+            NavTabItem("Photos", Icons.Default.CameraAlt, "nav_tab_photos"),
             NavTabItem("Downloads", Icons.Default.Download, "nav_tab_downloads", badgeCount = activeDownloadsCount),
             NavTabItem("Library", Icons.Default.VideoLibrary, "nav_tab_library", badgeCount = libraryCount),
             NavTabItem("Settings", Icons.Default.Settings, "nav_tab_settings")
@@ -84,7 +95,7 @@ fun LiquidGlassNavigationBar(
         modifier = modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 14.dp, vertical = 6.dp),
         contentAlignment = Alignment.Center
     ) {
         // Floating Frosted Bar
@@ -93,17 +104,17 @@ fun LiquidGlassNavigationBar(
                 .fillMaxWidth()
                 .height(64.dp)
                 .shadow(
-                    elevation = 16.dp,
+                    elevation = 20.dp,
                     shape = RoundedCornerShape(32.dp),
-                    ambientColor = Color.Black.copy(alpha = 0.6f),
-                    spotColor = Color.Black.copy(alpha = 0.4f)
+                    ambientColor = Color.Black.copy(alpha = 0.65f),
+                    spotColor = AccentViolet.copy(alpha = 0.35f)
                 )
                 .clip(RoundedCornerShape(32.dp))
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color(0xF5171F33),
-                            Color(0xFA0E1524)
+                            Color(0xF518142A),
+                            Color(0xFA0F0D1C)
                         )
                     )
                 )
@@ -111,8 +122,8 @@ fun LiquidGlassNavigationBar(
                     width = 1.dp,
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            Color.White.copy(alpha = 0.22f),
-                            Color.White.copy(alpha = 0.05f)
+                            Color.White.copy(alpha = 0.28f),
+                            Color.White.copy(alpha = 0.06f)
                         )
                     ),
                     shape = RoundedCornerShape(32.dp)
@@ -122,36 +133,59 @@ fun LiquidGlassNavigationBar(
             BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
                 val tabCount = tabs.size
                 val itemWidth = maxWidth / tabCount
-                val capsuleWidth = itemWidth - 6.dp
+                val capsuleWidth = itemWidth - 4.dp
 
-                // Smooth Sliding Capsule Transition
+                // Smooth Liquid Capsule Transition (with spring physics)
                 val animatedOffsetX by animateDpAsState(
-                    targetValue = (itemWidth * selectedTab) + 3.dp,
+                    targetValue = (itemWidth * selectedTab) + 2.dp,
                     animationSpec = spring(
-                        dampingRatio = 0.78f,
-                        stiffness = 420f
+                        dampingRatio = 0.72f,
+                        stiffness = 380f
                     ),
-                    label = "capsule_translation_x"
+                    label = "liquid_capsule_x"
                 )
 
-                // Active Capsule Pill
+                val infiniteTransition = rememberInfiniteTransition(label = "nav_infinite")
+                val badgePulseScale by infiniteTransition.animateFloat(
+                    initialValue = 1.0f,
+                    targetValue = 1.18f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(650, easing = FastOutSlowInEasing),
+                        repeatMode = RepeatMode.Reverse
+                    ),
+                    label = "badge_pulse"
+                )
+
+                // Liquid Capsule with Glowing Gradient & Specular Highlight
                 Box(
                     modifier = Modifier
                         .offset(x = animatedOffsetX)
                         .width(capsuleWidth)
                         .height(56.dp)
+                        .shadow(
+                            elevation = 10.dp,
+                            shape = RoundedCornerShape(28.dp),
+                            ambientColor = AccentViolet.copy(alpha = 0.6f),
+                            spotColor = Color(0xFF6366F1).copy(alpha = 0.5f)
+                        )
                         .clip(RoundedCornerShape(28.dp))
                         .background(
                             Brush.horizontalGradient(
                                 colors = listOf(
-                                    AccentIndigo,
-                                    Color(0xFF4F46E5)
+                                    AccentViolet,
+                                    AccentVioletDark,
+                                    Color(0xFF6366F1)
                                 )
                             )
                         )
                         .border(
                             width = 1.dp,
-                            color = Color.White.copy(alpha = 0.25f),
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    Color.White.copy(alpha = 0.5f),
+                                    Color.White.copy(alpha = 0.15f)
+                                )
+                            ),
                             shape = RoundedCornerShape(28.dp)
                         )
                 )
@@ -166,8 +200,8 @@ fun LiquidGlassNavigationBar(
                         val interactionSource = remember { MutableInteractionSource() }
 
                         val iconScale by animateFloatAsState(
-                            targetValue = if (isSelected) 1.08f else 1.0f,
-                            animationSpec = spring(dampingRatio = 0.7f),
+                            targetValue = if (isSelected) 1.10f else 1.0f,
+                            animationSpec = spring(dampingRatio = 0.65f, stiffness = 400f),
                             label = "tab_icon_scale"
                         )
 
@@ -199,17 +233,21 @@ fun LiquidGlassNavigationBar(
                                     )
 
                                     if (item.badgeCount > 0) {
+                                        val isDownloadsPulse = item.title == "Downloads" && activeDownloadsCount > 0
                                         Box(
                                             modifier = Modifier
                                                 .offset(x = 8.dp, y = (-4).dp)
-                                                .size(15.dp)
+                                                .scale(if (isDownloadsPulse) badgePulseScale else 1.0f)
+                                                .size(16.dp)
                                                 .clip(CircleShape)
-                                                .background(if (isSelected) Color.White else AccentSky),
+                                                .background(
+                                                    if (isSelected) Color.White else if (isDownloadsPulse) AccentCyan else AccentSky
+                                                ),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Text(
                                                 text = if (item.badgeCount > 99) "99+" else item.badgeCount.toString(),
-                                                color = if (isSelected) AccentIndigo else Color.Black,
+                                                color = if (isSelected) AccentViolet else Color.Black,
                                                 fontSize = 9.sp,
                                                 fontWeight = FontWeight.Bold
                                             )
@@ -222,7 +260,7 @@ fun LiquidGlassNavigationBar(
                                 Text(
                                     text = item.title,
                                     color = if (isSelected) Color.White else TextSecondary,
-                                    fontSize = 11.sp,
+                                    fontSize = 10.sp,
                                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
                                 )
                             }

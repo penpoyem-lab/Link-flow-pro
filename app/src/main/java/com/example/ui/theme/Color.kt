@@ -10,12 +10,23 @@ val SlateSurfaceElevated = Color(0xFF232E48)
 val SlateBorderSubtle = Color(0x1FFFFFFF)
 val SlateBorderCrisp = Color(0x33FFFFFF)
 
-// Refined Primary & Secondary Accents (Professional Tech Palette)
+// Refined Primary & Secondary Accents (Professional Tech & Violet Palette)
+val AccentViolet = Color(0xFF8B5CF6)       // Violet 500 (Signature primary in screenshot)
+val AccentVioletDark = Color(0xFF7C3AED)   // Violet 600
+val AccentVioletLight = Color(0xFFA78BFA)  // Violet 400
 val AccentIndigo = Color(0xFF6366F1)       // Indigo 500
 val AccentIndigoLight = Color(0xFF818CF8)  // Indigo 400
 val AccentSky = Color(0xFF0EA5E9)          // Sky 500
 val AccentCyan = Color(0xFF06B6D4)         // Cyan 500
 val AccentTeal = Color(0xFF14B8A6)         // Teal 500
+
+// Social Platform Brand Tokens
+val SocialYouTube = Color(0xFFFF0000)
+val SocialSpotify = Color(0xFF1DB954)
+val SocialInstagram = Color(0xFFE1306C)
+val SocialFacebook = Color(0xFF1877F2)
+val SocialTikTok = Color(0xFF111111)
+val SocialPinterest = Color(0xFFE60023)
 
 // Status & Semantic Tokens
 val SemanticSuccess = Color(0xFF10B981)    // Emerald 500

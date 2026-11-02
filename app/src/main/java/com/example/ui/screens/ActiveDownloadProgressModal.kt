@@ -27,13 +27,21 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -42,6 +50,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.data.local.DownloadTaskEntity
 import com.example.data.model.DownloadJobState
+import com.example.ui.components.AnimatedShimmerProgressIndicator
+import com.example.ui.theme.AccentCyan
 import com.example.ui.theme.AccentIndigo
 import com.example.ui.theme.AccentSky
 import com.example.ui.theme.SemanticError
@@ -69,6 +79,17 @@ fun ActiveDownloadProgressModal(
     val isFailed = stateEnum == DownloadJobState.FAILED
     val isPaused = stateEnum == DownloadJobState.PAUSED
 
+    val infiniteTransition = rememberInfiniteTransition(label = "modal_anim")
+    val iconPulseScale by infiniteTransition.animateFloat(
+        initialValue = 0.95f,
+        targetValue = 1.08f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(700),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "modal_icon_pulse"
+    )
+
     Dialog(onDismissRequest = onDismiss) {
         Card(
             shape = RoundedCornerShape(20.dp),
@@ -92,25 +113,26 @@ fun ActiveDownloadProgressModal(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
-                                .size(38.dp)
+                                .size(40.dp)
+                                .scale(if (!isCompleted && !isFailed && !isPaused) iconPulseScale else 1.0f)
                                 .clip(CircleShape)
                                 .background(
                                     when {
                                         isCompleted -> SemanticSuccess.copy(alpha = 0.15f)
                                         isFailed -> SemanticError.copy(alpha = 0.15f)
-                                        else -> AccentIndigo.copy(alpha = 0.15f)
+                                        else -> AccentIndigo.copy(alpha = 0.18f)
                                     }
                                 ),
                             contentAlignment = Alignment.Center
                         ) {
                             when {
-                                isCompleted -> Icon(Icons.Default.CheckCircle, contentDescription = null, tint = SemanticSuccess, modifier = Modifier.size(20.dp))
-                                isFailed -> Icon(Icons.Default.Error, contentDescription = null, tint = SemanticError, modifier = Modifier.size(20.dp))
+                                isCompleted -> Icon(Icons.Default.CheckCircle, contentDescription = null, tint = SemanticSuccess, modifier = Modifier.size(22.dp))
+                                isFailed -> Icon(Icons.Default.Error, contentDescription = null, tint = SemanticError, modifier = Modifier.size(22.dp))
                                 else -> CircularProgressIndicator(
                                     progress = { task.progressPercent / 100f },
-                                    modifier = Modifier.size(20.dp),
+                                    modifier = Modifier.size(22.dp),
                                     color = AccentSky,
-                                    strokeWidth = 2.5.dp
+                                    strokeWidth = 2.8.dp
                                 )
                             }
                         }
@@ -152,16 +174,35 @@ fun ActiveDownloadProgressModal(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Progress Bar
-                LinearProgressIndicator(
-                    progress = { (task.progressPercent / 100f).coerceIn(0f, 1f) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(6.dp)
-                        .clip(RoundedCornerShape(3.dp)),
-                    color = if (isCompleted) SemanticSuccess else if (isFailed) SemanticError else AccentIndigo,
-                    trackColor = SlateSurfaceVariant
-                )
+                // Fluid Shimmer Progress Bar
+                if (isCompleted) {
+                    LinearProgressIndicator(
+                        progress = { 1f },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(8.dp)
+                            .clip(RoundedCornerShape(4.dp)),
+                        color = SemanticSuccess,
+                        trackColor = SlateSurfaceVariant
+                    )
+                } else if (isFailed) {
+                    LinearProgressIndicator(
+                        progress = { (task.progressPercent / 100f).coerceIn(0f, 1f) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(8.dp)
+                            .clip(RoundedCornerShape(4.dp)),
+                        color = SemanticError,
+                        trackColor = SlateSurfaceVariant
+                    )
+                } else {
+                    AnimatedShimmerProgressIndicator(
+                        progress = task.progressPercent / 100f,
+                        height = 8.dp,
+                        trackColor = SlateSurfaceVariant,
+                        gradientColors = listOf(AccentIndigo, AccentSky, AccentCyan)
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(10.dp))
 

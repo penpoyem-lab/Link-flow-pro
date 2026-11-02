@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
@@ -45,6 +46,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -52,12 +54,16 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
+import coil.compose.AsyncImage
 import com.example.data.local.DownloadTaskEntity
 import com.example.data.model.DownloadJobState
 import com.example.data.model.MediaFormat
+import com.example.ui.components.AnimatedShimmerProgressIndicator
 import com.example.ui.theme.AccentCyan
 import com.example.ui.theme.AccentIndigo
 import com.example.ui.theme.AccentSky
+import com.example.ui.theme.AccentViolet
+import com.example.ui.theme.AccentVioletLight
 import com.example.ui.theme.SemanticError
 import com.example.ui.theme.SemanticSuccess
 import com.example.ui.theme.SemanticWarning
@@ -128,14 +134,26 @@ fun DownloadsHistoryScreen(
                 )
             }
 
-            if (downloads.any { it.state == DownloadJobState.COMPLETED.name }) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (downloads.any { it.state == DownloadJobState.COMPLETED.name }) {
+                    IconButton(
+                        onClick = onClearCompleted,
+                        modifier = Modifier.testTag("clear_history_btn")
+                    ) {
+                        Icon(
+                            Icons.Default.DeleteSweep,
+                            contentDescription = "Clear Completed",
+                            tint = TextSecondary
+                        )
+                    }
+                }
+
                 IconButton(
-                    onClick = onClearCompleted,
-                    modifier = Modifier.testTag("clear_history_btn")
+                    onClick = { /* Notification settings / history */ }
                 ) {
                     Icon(
-                        Icons.Default.DeleteSweep,
-                        contentDescription = "Clear Completed",
+                        Icons.Default.Notifications,
+                        contentDescription = "Notifications",
                         tint = TextSecondary
                     )
                 }
@@ -148,9 +166,9 @@ fun DownloadsHistoryScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(14.dp))
                 .background(SlateSurface)
-                .border(1.dp, SlateBorderSubtle, RoundedCornerShape(12.dp))
+                .border(1.dp, SlateBorderSubtle, RoundedCornerShape(14.dp))
                 .padding(4.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
@@ -166,8 +184,8 @@ fun DownloadsHistoryScreen(
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(if (isSelected) AccentIndigo else Color.Transparent)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(if (isSelected) AccentViolet else Color.Transparent)
                         .clickable { selectedFilter = key }
                         .padding(vertical = 8.dp),
                     contentAlignment = Alignment.Center
@@ -176,7 +194,7 @@ fun DownloadsHistoryScreen(
                         text = label,
                         color = if (isSelected) Color.White else TextSecondary,
                         fontSize = 12.sp,
-                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                     )
                 }
             }
@@ -295,20 +313,29 @@ fun DownloadItemCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Media Icon Container
+                // Media Thumbnail or Icon Container
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(52.dp)
                         .clip(RoundedCornerShape(10.dp))
-                        .background(if (isVideo) AccentIndigo.copy(alpha = 0.15f) else AccentSky.copy(alpha = 0.15f)),
+                        .background(if (isVideo) AccentViolet.copy(alpha = 0.15f) else AccentSky.copy(alpha = 0.15f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = if (isVideo) Icons.Default.Videocam else Icons.Default.Audiotrack,
-                        contentDescription = null,
-                        tint = if (isVideo) AccentIndigo else AccentSky,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    if (task.thumbnailUrl != null) {
+                        AsyncImage(
+                            model = task.thumbnailUrl,
+                            contentDescription = task.title,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Icon(
+                            imageVector = if (isVideo) Icons.Default.Videocam else Icons.Default.Audiotrack,
+                            contentDescription = null,
+                            tint = if (isVideo) AccentVioletLight else AccentSky,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
@@ -369,15 +396,23 @@ fun DownloadItemCard(
             // Real-time progress bar if running or paused
             if (!isCompleted && !isFailed) {
                 Spacer(modifier = Modifier.height(10.dp))
-                LinearProgressIndicator(
-                    progress = { (task.progressPercent / 100f).coerceIn(0f, 1f) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(4.dp)
-                        .clip(RoundedCornerShape(2.dp)),
-                    color = AccentIndigo,
-                    trackColor = SlateSurfaceElevated
-                )
+                if (isPaused) {
+                    LinearProgressIndicator(
+                        progress = { (task.progressPercent / 100f).coerceIn(0f, 1f) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(5.dp)
+                            .clip(RoundedCornerShape(3.dp)),
+                        color = SemanticWarning,
+                        trackColor = SlateSurfaceElevated
+                    )
+                } else {
+                    AnimatedShimmerProgressIndicator(
+                        progress = task.progressPercent / 100f,
+                        height = 5.dp,
+                        trackColor = SlateSurfaceElevated
+                    )
+                }
             }
         }
     }
