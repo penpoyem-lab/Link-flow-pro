@@ -48,6 +48,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -64,6 +65,9 @@ import androidx.core.content.FileProvider
 import com.example.data.local.DownloadTaskEntity
 import com.example.data.model.DownloadJobState
 import com.example.data.model.MediaFormat
+import com.example.ui.components.GooglePlayPullToRefreshBox
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import com.example.ui.theme.AccentCyan
 import com.example.ui.theme.AccentIndigo
 import com.example.ui.theme.AccentSky
@@ -117,12 +121,25 @@ fun LibraryScreen(
         matchesCategory && matchesSearch
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(SlateBackground)
-            .padding(horizontal = 16.dp)
+    val coroutineScope = rememberCoroutineScope()
+    var isRefreshing by remember { mutableStateOf(false) }
+
+    GooglePlayPullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = {
+            isRefreshing = true
+            coroutineScope.launch {
+                delay(1200)
+                isRefreshing = false
+            }
+        }
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(SlateBackground)
+                .padding(horizontal = 16.dp)
+        ) {
         Spacer(modifier = Modifier.height(10.dp))
 
         // Screen Top Bar
@@ -292,6 +309,7 @@ fun LibraryScreen(
             }
         }
     }
+}
 
     // Rename Dialog
     if (renamingTask != null) {

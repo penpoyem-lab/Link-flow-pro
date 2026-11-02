@@ -47,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -59,6 +60,11 @@ import com.example.data.local.DownloadTaskEntity
 import com.example.data.model.DownloadJobState
 import com.example.data.model.MediaFormat
 import com.example.ui.components.AnimatedShimmerProgressIndicator
+import com.example.ui.components.GooglePlayLoadingOverlay
+import com.example.ui.components.GooglePlayPullToRefreshBox
+import com.example.ui.components.GooglePlaySquigglyLoader
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import com.example.ui.theme.AccentCyan
 import com.example.ui.theme.AccentIndigo
 import com.example.ui.theme.AccentSky
@@ -87,6 +93,8 @@ fun DownloadsHistoryScreen(
     onClearCompleted: () -> Unit
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    var isRefreshing by remember { mutableStateOf(false) }
     var selectedFilter by remember { mutableStateOf("ALL") } // "ALL", "ACTIVE", "COMPLETED", "FAILED"
 
     val filteredList = remember(downloads, selectedFilter) {
@@ -104,12 +112,22 @@ fun DownloadsHistoryScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(SlateBackground)
-            .padding(horizontal = 16.dp)
+    GooglePlayPullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = {
+            isRefreshing = true
+            coroutineScope.launch {
+                delay(1200)
+                isRefreshing = false
+            }
+        }
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(SlateBackground)
+                .padding(horizontal = 16.dp)
+        ) {
         Spacer(modifier = Modifier.height(10.dp))
 
         // Screen Top Bar
@@ -283,6 +301,7 @@ fun DownloadsHistoryScreen(
             }
         }
     }
+}
 }
 
 @Composable

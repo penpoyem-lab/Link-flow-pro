@@ -67,6 +67,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -75,7 +76,12 @@ import com.example.data.model.MediaAnalysisResult
 import com.example.data.model.MediaFormat
 import com.example.data.model.QualityOption
 import com.example.ui.LinkFlowUiState
+import com.example.ui.components.GooglePlayLoadingOverlay
+import com.example.ui.components.GooglePlayPullToRefreshBox
+import com.example.ui.components.GooglePlaySquigglyLoader
 import com.example.ui.components.rememberAnimatedGradientBrush
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import com.example.ui.theme.AccentCyan
 import com.example.ui.theme.AccentIndigo
 import com.example.ui.theme.AccentSky
@@ -104,19 +110,32 @@ fun InstagramPhotoDownloaderScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    var isRefreshing by remember { mutableStateOf(false) }
     var selectedPhotoIndex by remember { mutableIntStateOf(0) }
     var selectedPhotoFormat by remember { mutableStateOf("JPG") } // "JPG" or "PNG"
 
     val analysis = uiState.currentAnalysis
     val isPhotoReady = analysis != null && (analysis.isPhotoPost || analysis.photoUrls.isNotEmpty())
 
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .background(SlateBackground)
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
+    Box(modifier = modifier.fillMaxSize()) {
+        GooglePlayPullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = {
+                isRefreshing = true
+                coroutineScope.launch {
+                    delay(1200)
+                    isRefreshing = false
+                }
+            }
+        ) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(SlateBackground)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
         item {
             Spacer(modifier = Modifier.height(10.dp))
 
@@ -310,7 +329,7 @@ fun InstagramPhotoDownloaderScreen(
                                 .testTag("ig_btn_fetch_photo")
                         ) {
                             if (uiState.isAnalyzing) {
-                                CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color.White, strokeWidth = 2.dp)
+                                GooglePlaySquigglyLoader(modifier = Modifier.size(20.dp), strokeColor = Color.White, strokeWidth = 2.4.dp)
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text("Extracting…", fontSize = 13.sp)
                             } else {
@@ -601,6 +620,13 @@ fun InstagramPhotoDownloaderScreen(
         item {
             Spacer(modifier = Modifier.height(80.dp))
         }
+    }
+}
+
+        GooglePlayLoadingOverlay(
+            isLoading = uiState.isAnalyzing,
+            message = "Extracting Instagram HD media…"
+        )
     }
 }
 

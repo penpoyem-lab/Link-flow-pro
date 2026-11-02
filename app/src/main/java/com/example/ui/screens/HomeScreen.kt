@@ -77,6 +77,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -85,6 +88,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.components.AnimatedShimmerProgressIndicator
 import com.example.ui.components.AnimatedWaveformVisualizer
+import com.example.ui.components.GooglePlayLoadingOverlay
+import com.example.ui.components.GooglePlayPullToRefreshBox
+import com.example.ui.components.GooglePlaySquigglyLoader
 import com.example.ui.components.rememberAnimatedGradientBrush
 import coil.compose.AsyncImage
 import com.example.data.local.DownloadTaskEntity
@@ -92,6 +98,8 @@ import com.example.data.model.DownloadJobState
 import com.example.data.model.MediaAnalysisResult
 import com.example.data.model.MediaFormat
 import com.example.data.model.QualityOption
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import com.example.ui.LinkFlowUiState
 import com.example.ui.theme.AccentCyan
 import com.example.ui.theme.AccentIndigo
@@ -128,6 +136,8 @@ fun HomeScreen(
     onNavigateToDownloads: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    var isRefreshing by remember { mutableStateOf(false) }
     val infiniteTransition = rememberInfiniteTransition(label = "home_infinite_anim")
 
     val readyDotPulse by infiniteTransition.animateFloat(
@@ -164,12 +174,23 @@ fun HomeScreen(
             )
         }
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+        // Google Play Style Morphing Shape Pull-To-Refresh Container (Video 1)
+        GooglePlayPullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = {
+                isRefreshing = true
+                coroutineScope.launch {
+                    delay(1200)
+                    isRefreshing = false
+                }
+            }
         ) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
             item {
                 Spacer(modifier = Modifier.height(10.dp))
 
@@ -333,10 +354,11 @@ fun HomeScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (uiState.isAnalyzing) {
-                                    CircularProgressIndicator(
-                                        color = Color.White,
-                                        strokeWidth = 2.dp,
-                                        modifier = Modifier.size(18.dp)
+                                    GooglePlaySquigglyLoader(
+                                        size = 22.dp,
+                                        strokeColor = Color.White,
+                                        accentColor = Color(0xFFE2E8F0),
+                                        strokeWidth = 2.4.dp
                                     )
                                 } else {
                                     Icon(
@@ -1396,6 +1418,13 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(80.dp))
         }
     }
+}
+
+        // Google Play Style Centered Squiggly Loader Overlay (Video 2) with transparent background
+        GooglePlayLoadingOverlay(
+            isLoading = uiState.isAnalyzing,
+            message = "Analyzing media link…"
+        )
     }
 }
 
